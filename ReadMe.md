@@ -9,7 +9,7 @@ The bot takes the following inputs from the user:
 
 City: Take the input from the customer as a text field. For example:
 
-Bot: In which city are you looking for restaurants?
+Bot: In which city are you looking for restaurants
 
 User: anywhere in Delhi
 
