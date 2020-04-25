@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Rasa Core Visualisation</title>
+    <script src="https://dagrejs.github.io/project/dagre-d3/latest/dagre-d3.min.js"></script>
+    <script src="https://dagrejs.github.io/project/dagre/latest/dagre.min.js"></script>
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <script src="https://dagrejs.github.io/project/graphlib-dot/v0.6.3/graphlib-dot.js"></script>
+</head>
+<body>
+<div id="errormsg" style="color: #b00"></div>
+<svg>
+    <style>
+        .node.invisible > rect {
+            display: none;
+        }
+
+        .node.start > rect {
+            fill: #7f7;
+            rx: 30;
+            ry: 18;
+        }
+
+        .node.end > rect {
+            fill: #f77;
+            rx: 30;
+            ry: 18;
+        }
+
+        .node:not(.active) > rect, .node:not(.active) > .label {
+            opacity: 0.4;
+        }
+
+        .edgePath:not(.active) path {
+            opacity: 0.4;
+        }
+
+        .node.ellipsis > rect {
+            fill: #CCC;
+        }
+
+        .node.intent > rect {
+            fill: #7ff;
+        }
+
+        .node.dashed > rect {
+            stroke-dasharray: 5;
+        }
+
+        text {
+            font-weight: 300;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serf, serif;
+            font-size: 14px;
+            color: #1f1d1d;
+        }
+
+        .node rect {
+            stroke: #444;
+            fill: #fff;
+            stroke-width: 1.5px;
+        }
+
+        .edgePath path {
+            stroke: #333;
+            stroke-width: 1.5px;
+        }
+
+        svg {
+            position: fixed;
+            top: 10px;
+            left: 0;
+            height: 100%;
+            width: 100%
+        }
+    </style>
+    <g></g>
+</svg>
+<script>
+
+  function serveGraph() {
+    let oldInputGraphValue;
+
+    const url = 'visualization.dot';
+    const refreshInterval = 500;
+
+    // trigger a refresh by fetching an updated graph
+    setInterval(function () {
+      fetch(url).then(r => r.text()).then(dot => {
+        document.getElementById('errormsg').innerHTML = '';
+        if (oldInputGraphValue === dot) return;
+
+        oldInputGraphValue = dot;
+        drawGraph(dot);
+      }).catch(err => {
+        document.getElementById('errormsg').innerHTML =
+          'Failed to update plot. (' + err.message + ')';
+      });
+    }, refreshInterval);
+  }
+
+  function drawGraph(graph) {
+    let g = graphlibDot.read(graph);
+    // Set margins, if not present
+    if (!g.graph().hasOwnProperty("marginx") &&
+      !g.graph().hasOwnProperty("marginy")) {
+      g.graph().marginx = 20;
+      g.graph().marginy = 20;
+    }
+    g.graph().transition = function (selection) {
+      return selection.transition().duration(300);
+    };
+    // Render the graph into svg g
+    d3.select("svg g").call(render, g);
+  }
+  // Set up zoom support
+  const svg = d3.select("svg"),
+    inner = d3.select("svg g"),
+    zoom = d3.zoom().on("zoom", function () {
+      inner.attr("transform", d3.event.transform);
+    });
+  svg.call(zoom);
+
+  // Create and configure the renderer
+  const render = dagreD3.render();
+
+  let isClient = false;
+  isClient = true;
+
+  if (isClient) {
+    // Mark all nodes and their edges as active
+    cssRules = document.styleSheets[0].cssRules;
+    cssRules[3].style.opacity = 1;
+    cssRules[4].style.opacity = 1;
+
+    let graph;
+    graph = `digraph  {
+0 [class="start active", fillcolor=green, fontsize=12, label=START, style=filled];
+"-1" [class=end, fillcolor=red, fontsize=12, label=END, style=filled];
+1 [class="", fontsize=12, label=utter_greet];
+2 [class="", fontsize=12, label=validate_location];
+3 [class="", fontsize=12, label=utter_do_not_operate];
+4 [class="", fontsize=12, label=utter_goodbye];
+5 [class="", fontsize=12, label=action_slot_reset];
+6 [class="", fontsize=12, label=utter_restart];
+8 [class="", fontsize=12, label=utter_ask_location];
+15 [class="", fontsize=12, label=validate_location];
+16 [class="", fontsize=12, label=utter_ask_cuisine];
+18 [class="", fontsize=12, label=utter_ask_budget];
+19 [class="", fontsize=12, label=ActionSearchRestaurants];
+20 [class="", fontsize=12, label=utter_ask_sendmail];
+21 [class="", fontsize=12, label=utter_get_email];
+22 [class="", fontsize=12, label=send_email];
+23 [class="", fontsize=12, label=utter_sent_email];
+29 [class="", fontsize=12, label=utter_ask_cuisine];
+40 [class="", fontsize=12, label=utter_ask_cuisine];
+51 [class="", fontsize=12, label=validate_location];
+96 [class="", fontsize=12, label=utter_ask_cuisine];
+111 [class="", fontsize=12, label=utter_ask_sendmail];
+121 [class="", fontsize=12, label=ActionSearchRestaurants];
+123 [class="", fontsize=12, label=validate_location];
+124 [class="", fontsize=12, label=ActionSearchRestaurants];
+132 [class="", fontsize=12, label=utter_do_not_operate];
+154 [class="", fontsize=12, label=utter_default];
+172 [class="", fontsize=12, label=send_email];
+177 [class="", fontsize=12, label=validate_cuisine];
+178 [class="", fontsize=12, label=utter_ask_budget];
+179 [class="", fontsize=12, label=validate_price];
+181 [class="", fontsize=12, label=utter_ask_sendmail];
+182 [class="", fontsize=12, label=utter_get_email];
+183 [class="", fontsize=12, label=get_mail];
+184 [class="", fontsize=12, label=mail_results];
+216 [class="", fontsize=12, label=validate_cuisine];
+304 [class="", fontsize=12, label=validate_cuisine];
+333 [class="", fontsize=12, label=utter_ask_cuisine];
+391 [class="", fontsize=12, label=validate_cuisine];
+420 [class="", fontsize=12, label=utter_ask_location];
+448 [class="", fontsize=12, label=validate_cuisine];
+452 [class="", fontsize=12, label=ActionSearchRestaurants];
+488 [class=intent, fillcolor=lightblue, label="good evening", shape=rect, style=filled];
+489 [class=intent, fillcolor=lightblue, label="/restaurant_search{\\"cuisine\\": \\"Indian\\"}", shape=rect, style=filled];
+490 [class=intent, fillcolor=lightblue, label="please find me a restaurent in bangalore", shape=rect, style=filled];
+491 [class=intent, fillcolor=lightblue, label="/restaurant_search{\\"cuisine\\": \\"chinese\\", \\"location\\": \\"mirzapur\\"}", shape=rect, style=filled];
+492 [class=intent, fillcolor=lightblue, label="can you book a table in Bijapur in a Less than Rs.300 price range with American food for four people", shape=rect, style=filled];
+493 [class=intent, fillcolor=lightblue, label=Lucknow, shape=rect, style=filled];
+494 [class=intent, fillcolor=lightblue, label="/restaurant_search{\\"cuisine\\": \\"chinese\\", \\"location\\": \\"Mumbai\\"}", shape=rect, style=filled];
+495 [class=intent, fillcolor=lightblue, label="/restaurant_search{\\"cuisine\\": \\"egyptian\\"}", shape=rect, style=filled];
+496 [class=intent, fillcolor=lightblue, label="/restaurant_search{\\"cuisine\\": \\"chinese\\", \\"location\\": \\"Mumbai\\", \\"price\\": \\"more than 700\\"}", shape=rect, style=filled];
+497 [class=intent, fillcolor=lightblue, label="please find me chinese restaurant in delhi", shape=rect, style=filled];
+498 [class=intent, fillcolor=lightblue, label="/restaurant_search{\\"cuisine\\": \\"egyptian\\"}", shape=rect, style=filled];
+499 [class=intent, fillcolor=lightblue, label="/restaurant_search{\\"location\\": \\"wasseypur\\"}", shape=rect, style=filled];
+500 [class=intent, fillcolor=lightblue, label="I am looking for some restaurants in Mumbai", shape=rect, style=filled];
+501 [class=intent, fillcolor=lightblue, label="find a chinese restaurent in delhi", shape=rect, style=filled];
+502 [class=intent, fillcolor=lightblue, label="please show me a few italian restaurants in bangalore", shape=rect, style=filled];
+503 [class=intent, fillcolor=lightblue, label="Steel City", shape=rect, style=filled];
+504 [class=intent, fillcolor=lightblue, label="/restaurant_search{\\"price\\": \\"more than 700\\"}", shape=rect, style=filled];
+505 [class=intent, fillcolor=lightblue, label="/restaurant_search{\\"price\\": \\"less than 500\\"}", shape=rect, style=filled];
+506 [class=intent, fillcolor=lightblue, label=Jalandhar, shape=rect, style=filled];
+507 [class=intent, fillcolor=lightblue, label="mamta.dinesh@gmail.com", shape=rect, style=filled];
+508 [class=intent, fillcolor=lightblue, label="sounds really good", shape=rect, style=filled];
+509 [class=intent, fillcolor=lightblue, label=no, shape=rect, style=filled];
+510 [class=intent, fillcolor=lightblue, label="mamta.dinesh@gmail.com", shape=rect, style=filled];
+511 [class=intent, fillcolor=lightblue, label=great, shape=rect, style=filled];
+512 [class=intent, fillcolor=lightblue, label="mamta.dinesh@gmail.com", shape=rect, style=filled];
+513 [class=intent, fillcolor=lightblue, label="mamta.dinesh@gmail.com", shape=rect, style=filled];
+514 [class=intent, fillcolor=lightblue, label="/email{\\"cuisine\\": \\"Mexican\\"}", shape=rect, style=filled];
+515 [class=intent, fillcolor=lightblue, label="North Indian", shape=rect, style=filled];
+516 [class=intent, fillcolor=lightblue, label=Mexican, shape=rect, style=filled];
+517 [class=intent, fillcolor=lightblue, label="North Indian", shape=rect, style=filled];
+518 [class=intent, fillcolor=lightblue, label=Bhopal, shape=rect, style=filled];
+519 [class=intent, fillcolor=lightblue, label=Chinese, shape=rect, style=filled];
+520 [class=intent, fillcolor=lightblue, label="please show me a few italian restaurants in bangalore", shape=rect, style=filled];
+521 [class=intent, fillcolor=lightblue, label="/email{\\"cuisine\\": \\"Mexican\\"}", shape=rect, style=filled];
+522 [class=intent, fillcolor=lightblue, label="/restaurant_search{\\"cuisine\\": \\"Mexican\\"}", shape=rect, style=filled];
+523 [class=intent, fillcolor=lightblue, label="mamta.dinesh@gmail.com", shape=rect, style=filled];
+524 [class=intent, fillcolor=lightblue, label="/restaurant_search{\\"location\\": \\"Between Rs.300\\"}", shape=rect, style=filled];
+525 [class=intent, fillcolor=lightblue, label=Rajkot, shape=rect, style=filled];
+526 [class=intent, fillcolor=lightblue, label="/restaurant_search{\\"price\\": \\"less than 500\\"}", shape=rect, style=filled];
+527 [class=intent, fillcolor=lightblue, label=Pondicherry, shape=rect, style=filled];
+528 [class=intent, fillcolor=lightblue, label="great choice", shape=rect, style=filled];
+529 [class=intent, fillcolor=lightblue, label="mamta.dinesh@gmail.com", shape=rect, style=filled];
+530 [class=intent, fillcolor=lightblue, label="/restaurant_search{\\"cuisine\\": \\"Chinese\\"}", shape=rect, style=filled];
+531 [class=intent, fillcolor=lightblue, label="/restaurant_search{\\"cuisine\\": \\"Mexican\\"}", shape=rect, style=filled];
+532 [class=intent, fillcolor=lightblue, label="I am looking for some restaurants in Delhi.", shape=rect, style=filled];
+533 [class=intent, fillcolor=lightblue, label="restaurant in bangalore", shape=rect, style=filled];
+534 [class=intent, fillcolor=lightblue, label="mamta.dinesh@gmail.com", shape=rect, style=filled];
+0 -> 488  [class="", key=0];
+0 -> 489  [class="", key=0];
+0 -> 490  [class="", key=0];
+1 -> 491  [class="", key=0];
+1 -> 492  [class="", key=0];
+1 -> 493  [class="", key=0];
+1 -> 494  [class="", key=0];
+1 -> 495  [class="", key=0];
+1 -> 496  [class="", key=0];
+1 -> 497  [class="", key=0];
+1 -> 498  [class="", key=0];
+2 -> 3  [class="", key=NONE, label=""];
+3 -> 4  [class="", key=NONE, label=""];
+4 -> 5  [class="", key=NONE, label=""];
+5 -> 6  [class="", key=NONE, label=""];
+5 -> "-1"  [class="", key=NONE, label=""];
+5 -> 154  [class="", key=NONE, label=""];
+6 -> "-1"  [class="", key=NONE, label=""];
+8 -> 499  [class="", key=0];
+8 -> 500  [class="", key=0];
+8 -> 501  [class="", key=0];
+15 -> 16  [class="", key=NONE, label=""];
+15 -> 29  [class="", key=NONE, label=""];
+16 -> 502  [class="", key=0];
+16 -> 503  [class="", key=0];
+18 -> 504  [class="", key=0];
+18 -> 505  [class="", key=0];
+19 -> 20  [class="", key=NONE, label=""];
+19 -> 121  [class="", key=NONE, label=""];
+19 -> "-1"  [class="", key=NONE, label=""];
+19 -> 506  [class="", key=0];
+19 -> 507  [class="", key=0];
+20 -> 508  [class="", key=0];
+20 -> 509  [class="", key=0];
+20 -> 510  [class="", key=0];
+20 -> 511  [class="", key=0];
+21 -> 512  [class="", key=0];
+21 -> 513  [class="", key=0];
+22 -> 23  [class="", key=NONE, label=""];
+23 -> 4  [class="", key=NONE, label=""];
+29 -> 514  [class="", key=0];
+29 -> 515  [class="", key=0];
+29 -> 516  [class="", key=0];
+29 -> 517  [class="", key=0];
+29 -> 518  [class="", key=0];
+40 -> 519  [class="", key=0];
+40 -> 520  [class="", key=0];
+40 -> 521  [class="", key=0];
+51 -> 18  [class="", key=NONE, label=""];
+51 -> 178  [class="", key=NONE, label=""];
+96 -> 522  [class="", key=0];
+111 -> 523  [class="", key=0];
+121 -> 524  [class="", key=0];
+123 -> 124  [class="", key=NONE, label=""];
+123 -> 216  [class="", key=NONE, label=""];
+123 -> 420  [class="", key=NONE, label=""];
+123 -> 177  [class="", key=NONE, label=""];
+124 -> 20  [class="", key=NONE, label=""];
+124 -> 525  [class="", key=0];
+132 -> "-1"  [class="", key=NONE, label=""];
+154 -> "-1"  [class="", key=NONE, label=""];
+172 -> "-1"  [class="", key=NONE, label=""];
+177 -> 178  [class="", key=NONE, label=""];
+177 -> 177  [class="", key=NONE, label=""];
+178 -> 526  [class="", key=0];
+179 -> 124  [class="", key=NONE, label=""];
+179 -> 121  [class="", key=NONE, label=""];
+179 -> 452  [class="", key=NONE, label=""];
+179 -> 178  [class="", key=NONE, label=""];
+181 -> 527  [class="", key=0];
+181 -> 528  [class="", key=0];
+182 -> 529  [class="", key=0];
+183 -> 184  [class="", key=NONE, label=""];
+184 -> 23  [class="", key=NONE, label=""];
+216 -> 179  [class="", key=NONE, label=""];
+216 -> 40  [class="", key=NONE, label=""];
+304 -> 40  [class="", key=NONE, label=""];
+304 -> 333  [class="", key=NONE, label=""];
+333 -> 530  [class="", key=0];
+333 -> 531  [class="", key=0];
+391 -> 8  [class="", key=NONE, label=""];
+420 -> 532  [class="", key=0];
+448 -> 533  [class="", key=0];
+452 -> 534  [class="", key=0];
+488 -> 1  [class="", key=0];
+489 -> 448  [class="", key=0];
+490 -> 15  [class="", key=0];
+491 -> 2  [class="", key=0];
+492 -> 8  [class="", key=0];
+493 -> 15  [class="", key=0];
+494 -> 51  [class="", key=0];
+495 -> 96  [class="", key=0];
+496 -> 123  [class="", key=0];
+497 -> 391  [class="", key=0];
+498 -> 304  [class="", key=0];
+499 -> 2  [class="", key=0];
+500 -> 15  [class="", key=0];
+501 -> 51  [class="", key=0];
+502 -> 18  [class="", key=0];
+503 -> 16  [class="", key=0];
+504 -> 19  [class="", key=0];
+505 -> 18  [class="", key=0];
+506 -> 111  [class="", key=0];
+507 -> 132  [class="", key=0];
+508 -> 21  [class="", key=0];
+509 -> 4  [class="", key=0];
+510 -> 4  [class="", key=0];
+511 -> 182  [class="", key=0];
+512 -> 22  [class="", key=0];
+513 -> 172  [class="", key=0];
+514 -> 18  [class="", key=0];
+515 -> 18  [class="", key=0];
+516 -> 40  [class="", key=0];
+517 -> 177  [class="", key=0];
+518 -> 304  [class="", key=0];
+519 -> 18  [class="", key=0];
+520 -> 178  [class="", key=0];
+521 -> 178  [class="", key=0];
+522 -> 8  [class="", key=0];
+523 -> 22  [class="", key=0];
+524 -> "-1"  [class="", key=0];
+525 -> 181  [class="", key=0];
+526 -> 179  [class="", key=0];
+527 -> 182  [class="", key=0];
+528 -> 182  [class="", key=0];
+529 -> 183  [class="", key=0];
+530 -> 177  [class="", key=0];
+531 -> 391  [class="", key=0];
+532 -> 177  [class="", key=0];
+533 -> 51  [class="", key=0];
+534 -> 132  [class="", key=0];
+}
+`;
+    drawGraph(graph);
+  } else {
+    serveGraph();
+  }
+
+
+</script>
+</body>
+</html>
